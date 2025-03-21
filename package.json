@@ -16,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/parthivsaikia/neurathon-finals/issues"
   },
-  "homepage": "https://github.com/parthivsaikia/neurathon-finals#readme"
+  "homepage": "https://github.com/parthivsaikia/neurathon-finals#readme",
+  "dependencies": {
+    "@types/cors": "^2.8.17",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7"
+  }
 }
