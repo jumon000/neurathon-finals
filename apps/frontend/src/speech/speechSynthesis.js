@@ -10,4 +10,17 @@ const speak = (text, rate, pitch) => {
   }
 };
 
-export default speak;
+const getSpeechParams = (emotion) => {
+  switch (emotion) {
+    case "happy":
+      return { rate: 1.2, pitch: 1.2 };
+    case "sad":
+      return { rate: 0.8, pitch: 0.8 };
+    case "angry":
+      return { rate: 1.5, pitch: 1.0 };
+    default:
+      return { rate: 1.0, pitch: 1.0 };
+  }
+};
+
+export { speak, getSpeechParams };

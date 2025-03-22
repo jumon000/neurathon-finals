@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Script from "next/script";
-import speak from "@/speech/speechSynthesis.js";
+import { speak, getSpeechParams } from "@/speech/speechSynthesis.js";
 
 export default function CameraGuide() {
+  const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const feedbackRef = useRef(null);
@@ -15,12 +16,47 @@ export default function CameraGuide() {
   const [stableFrames, setStableFrames] = useState(0);
   const [bookDetected, setBookDetected] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
-  const [extractedTextArray, setExtractedTestArray] = useState([]);
+  const [extractedTextArray, setExtractedTextArray] = useState([]);
   // Function to call when OpenCV.js is loaded
   const onOpenCvReady = () => {
     console.log("OpenCV.js is ready");
     setOpenCvLoaded(true);
   };
+
+  const speakText = (text, mood) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    let rate = 1.0;
+    let pitch = 1.0;
+    switch (mood) {
+      case "happy":
+        rate = 1.2;
+        pitch = 1.2;
+        break;
+      case "sad":
+        rate = 0.8;
+        pitch = 0.8;
+        break;
+      case "angry":
+        rate = 1.5;
+        pitch = 1.0;
+        break;
+      default:
+        rate = 1.0;
+        pitch = 1.0;
+    }
+    utterance.rate = rate;
+    utterance.pitch = pitch;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    if (extractedTextArray.length > 0) {
+      extractedTextArray.forEach(({ sentence, emotion }) => {
+        const { rate, pitch } = getSpeechParams(emotion);
+        speak(sentence, rate, pitch);
+      });
+    }
+  }, [extractedTextArray]);
 
   // Initialize camera
   useEffect(() => {
@@ -630,33 +666,30 @@ export default function CameraGuide() {
     };
   }, [cameraStarted, openCvLoaded, debugMode]);
 
-  const sendImageToBackend = async (dataURL) => {
+  const sendImageToBackend = async (imageData, fromCamera = false) => {
     setIsCapturing(true);
-
     try {
-      // Convert dataURL to Blob
-      const blob = await fetch(dataURL).then((res) => res.blob());
-
+      let blob;
+      if (typeof imageData === "string") {
+        // dataURL
+        const res = await fetch(imageData);
+        blob = await res.blob();
+      } else if (imageData instanceof Blob) {
+        blob = imageData;
+      } else {
+        throw new Error("Invalid image data");
+      }
       const formData = new FormData();
-      formData.append("file", blob, "captured_image.png");
-
-      console.log("Sending request to backend...");
-
-      // Change this URL to your actual backend endpoint
+      formData.append("file", blob, "image.png");
       const response = await fetch("http://localhost:8000/process-image/", {
         method: "POST",
         body: formData,
       });
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const data = await response.json();
-      console.log("Backend response:", data);
-      setExtractedTestArray(data.sentences);
-
-      console.log(extractedTextArray);
+      setExtractedTextArray(data.sentences);
       if (feedbackRef.current) {
         feedbackRef.current.textContent = "Image processed successfully!";
       }
@@ -667,9 +700,29 @@ export default function CameraGuide() {
       }
     } finally {
       setIsCapturing(false);
+      if (fromCamera) {
+        setCameraStarted(false);
+      }
     }
   };
 
+  const handleUploadClick = () => {
+    const file = fileInputRef.current.files[0];
+    if (file) {
+      sendImageToBackend(file);
+    } else {
+      alert("Please select a file first.");
+    }
+  };
+
+  useEffect(() => {
+    if (!cameraStarted && videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+      console.log("Camera stopped");
+    }
+  }, [cameraStarted]);
   // Manual capture button handler
   const handleCaptureClick = () => {
     if (!canvasRef.current) return;
@@ -778,6 +831,23 @@ export default function CameraGuide() {
         </button>
       </div>
 
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold mb-2">Manual Upload</h3>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          className="mb-2"
+        />
+        <button
+          onClick={handleUploadClick}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
+          disabled={isCapturing}
+        >
+          {isCapturing ? "Processing..." : "Upload Image"}
+        </button>
+      </div>
+
       {/* Processing feedback area */}
       <div ref={feedbackRef} className="mt-2 text-center text-gray-700 min-h-8">
         {cameraStarted && openCvLoaded
@@ -796,6 +866,16 @@ export default function CameraGuide() {
           <li>Toggle debug mode to see detection details</li>
         </ul>
       </div>
+      {extractedTextArray.length > 0 && (
+        <div className="mt-4 p-4 bg-white rounded shadow max-w-md">
+          <h2 className="text-xl font-bold mb-2 text-black">Extracted Text</h2>
+          {extractedTextArray.map((sentence, index) => (
+            <p key={index} className="text-black">
+              {sentence.sentence}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
