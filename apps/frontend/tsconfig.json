@@ -28,7 +28,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/app/page.jsx",
-    "src/app/read-book/page.jsx"
+    "src/app/read-book/page.jsx",
+    "src/speech/speechSynthesis.tjs"
   ],
   "exclude": ["node_modules"]
 }

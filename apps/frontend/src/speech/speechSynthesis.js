@@ -1,12 +1,13 @@
-export const welcomeNote = () => {
+"use client";
+const speak = (text, rate, pitch) => {
   // Only use window when in the browser
   if (typeof window !== "undefined") {
     const synth = window.speechSynthesis;
-    const text =
-      "Welcome, do you want to read a book? Or do you want to travel the world?";
     const utterThis = new SpeechSynthesisUtterance(text);
-    utterThis.pitch = 1;
-    utterThis.rate = 1;
+    utterThis.pitch = pitch;
+    utterThis.rate = rate;
     synth.speak(utterThis);
   }
 };
+
+export default speak;

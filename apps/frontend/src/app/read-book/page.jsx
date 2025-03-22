@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Script from "next/script";
+import speak from "@/speech/speechSynthesis.js";
 
 export default function CameraGuide() {
   const videoRef = useRef(null);
@@ -14,7 +15,7 @@ export default function CameraGuide() {
   const [stableFrames, setStableFrames] = useState(0);
   const [bookDetected, setBookDetected] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
-
+  const [extractedTextArray, setExtractedTestArray] = useState([]);
   // Function to call when OpenCV.js is loaded
   const onOpenCvReady = () => {
     console.log("OpenCV.js is ready");
@@ -368,17 +369,6 @@ export default function CameraGuide() {
           2,
         );
 
-        // Draw text clarity indicator
-        cv.putText(
-          dst,
-          `Text Clarity: ${textClarity.toFixed(1)}`,
-          new cv.Point(10, 60),
-          cv.FONT_HERSHEY_SIMPLEX,
-          0.5,
-          new cv.Scalar(255, 255, 0, 255),
-          1,
-        );
-
         bookROI.delete();
         sobelX.delete();
         sobelY.delete();
@@ -455,7 +445,7 @@ export default function CameraGuide() {
       const tooSmall = sizeRatioX < minSizeRatio || sizeRatioY < minSizeRatio;
       const tooBig = sizeRatioX > maxSizeRatio && sizeRatioY > maxSizeRatio;
 
-      // Text clarity check
+      // // Text clarity check
       const minClarity = 20; // Minimum text clarity value (adjust based on testing)
       const textNotClear = textClarity < minClarity;
 
@@ -664,7 +654,9 @@ export default function CameraGuide() {
 
       const data = await response.json();
       console.log("Backend response:", data);
+      setExtractedTestArray(data.sentences);
 
+      console.log(extractedTextArray);
       if (feedbackRef.current) {
         feedbackRef.current.textContent = "Image processed successfully!";
       }

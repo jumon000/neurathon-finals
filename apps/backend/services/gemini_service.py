@@ -34,10 +34,10 @@ def analyze_sentence(sentence, prev_emotion=None):
     **Sentence:** "{sentence}"
 
     **Response Format:**
-    Emotion: [Emotion Name]
+    [Emotion Name]
     """
 
-    emotion = call_gemini(emotion_prompt, "Emotion") or prev_emotion or "Neutral"
+    emotion = call_gemini(emotion_prompt, "") or prev_emotion or "Neutral"
     return analysis_models.SentenceAnalysis(sentence=sentence, emotion=emotion)
 
 def analyze_text(text):
