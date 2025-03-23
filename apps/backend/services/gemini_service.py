@@ -1,12 +1,15 @@
 import google.generativeai as genai
 from nltk.tokenize import sent_tokenize
 from models import analysis_models
+import os
 
 import nltk
 nltk.download('punkt_tab')
 import spacy
 
-genai.configure(api_key="AIzaSyDcrwJvTvh82gZfaziBNpW2F6zVZWfKL_U")
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+genai.configure(api_key=API_KEY)
 nlp = spacy.load("en_core_web_sm")
 nltk.download("punkt")
 

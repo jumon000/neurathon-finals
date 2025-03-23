@@ -1,8 +1,14 @@
 fastapi
-uvicorn
 python-multipart
 google-cloud-documentai
 google-generativeai
 pydantic
 nltk
-spacy
+spacy>=3.0.0
+opencv-python
+ultralytics
+torch
+torchvision
+timm
+uvicorn[standard]
+numpy

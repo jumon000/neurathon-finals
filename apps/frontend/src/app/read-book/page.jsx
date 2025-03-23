@@ -17,6 +17,8 @@ export default function CameraGuide() {
   const [bookDetected, setBookDetected] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [extractedTextArray, setExtractedTextArray] = useState([]);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [facingMode, setFacingMode] = useState("environment");
   // Function to call when OpenCV.js is loaded
   const onOpenCvReady = () => {
     console.log("OpenCV.js is ready");
@@ -63,32 +65,26 @@ export default function CameraGuide() {
     const video = videoRef.current;
 
     async function startCamera() {
-      if (!video) return;
+      if (!cameraOn || !video) return;
 
       try {
         console.log("Requesting camera access...");
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            width: { ideal: 1280 }, // Higher resolution for better text clarity
+            width: { ideal: 1280 },
             height: { ideal: 720 },
-            facingMode: "environment", // Prefer back camera if available
+            facingMode: facingMode,
           },
         });
 
         video.srcObject = stream;
 
-        // Wait for video to be ready
         video.onloadedmetadata = () => {
           console.log("Video metadata loaded");
           video
             .play()
             .then(() => {
-              console.log(
-                "Camera started successfully. Video dimensions:",
-                video.videoWidth,
-                "x",
-                video.videoHeight,
-              );
+              console.log("Camera started successfully");
               setCameraStarted(true);
             })
             .catch((err) => {
@@ -99,21 +95,31 @@ export default function CameraGuide() {
       } catch (err) {
         console.error("Error accessing camera:", err);
         setError("Unable to access camera: " + err.message);
+        setCameraOn(false);
       }
     }
 
-    startCamera();
+    if (cameraOn) {
+      startCamera();
+    }
 
-    // Clean up camera on unmount
     return () => {
       if (video && video.srcObject) {
         const tracks = video.srcObject.getTracks();
         tracks.forEach((track) => track.stop());
+        video.srcObject = null;
         console.log("Camera stopped");
+        setCameraStarted(false);
+
+        // Clear canvas
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
       }
     };
-  }, []); // Run once on component mount
-
+  }, [cameraOn, facingMode]);
   // Process frames with OpenCV when both camera and OpenCV are ready
   useEffect(() => {
     if (!cameraStarted || !openCvLoaded) return;
@@ -738,7 +744,6 @@ export default function CameraGuide() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      {/* Load OpenCV.js */}
       <Script
         src="https://docs.opencv.org/4.7.0/opencv.js"
         onLoad={onOpenCvReady}
@@ -746,6 +751,28 @@ export default function CameraGuide() {
       />
 
       <h1 className="text-2xl font-bold mb-4">Book Scanner</h1>
+
+      {/* Camera controls */}
+      <div className="mb-4 flex gap-4">
+        <button
+          onClick={() => setCameraOn(!cameraOn)}
+          className={`px-4 py-2 ${cameraOn ? "bg-red-500" : "bg-green-500"} text-white rounded hover:${cameraOn ? "bg-red-600" : "bg-green-600"}`}
+        >
+          {cameraOn ? "Turn Camera Off" : "Turn Camera On"}
+        </button>
+
+        <button
+          onClick={() =>
+            setFacingMode((prev) =>
+              prev === "environment" ? "user" : "environment",
+            )
+          }
+          className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600`}
+          disabled={!cameraOn}
+        >
+          Switch to {facingMode === "environment" ? "Front" : "Rear"} Camera
+        </button>
+      </div>
 
       {/* Status indicators */}
       <div className="mb-4 flex gap-4">
@@ -755,9 +782,15 @@ export default function CameraGuide() {
           OpenCV: {openCvLoaded ? "Loaded" : "Loading..."}
         </div>
         <div
-          className={`px-3 py-1 rounded ${cameraStarted ? "bg-green-500" : "bg-yellow-500"} text-white`}
+          className={`px-3 py-1 rounded ${
+            cameraOn
+              ? cameraStarted
+                ? "bg-green-500"
+                : "bg-yellow-500"
+              : "bg-gray-500"
+          } text-white`}
         >
-          Camera: {cameraStarted ? "Ready" : "Starting..."}
+          Camera: {cameraOn ? (cameraStarted ? "Ready" : "Starting...") : "Off"}
         </div>
         <div
           className={`px-3 py-1 rounded ${bookDetected ? "bg-green-500" : "bg-red-500"} text-white`}
@@ -789,7 +822,6 @@ export default function CameraGuide() {
 
       {/* Video and canvas container */}
       <div className="relative mb-4 border-2 border-gray-300 rounded-lg overflow-hidden max-w-md">
-        {/* Video element - hidden but used as source */}
         <video
           ref={videoRef}
           className="w-full"
@@ -799,10 +831,8 @@ export default function CameraGuide() {
           style={{ display: "none" }}
         ></video>
 
-        {/* Canvas - visible, shows processed frames */}
         <canvas ref={canvasRef} className="w-full"></canvas>
 
-        {/* Loading overlay */}
         {(!cameraStarted || !openCvLoaded) && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="text-white text-lg font-semibold">
