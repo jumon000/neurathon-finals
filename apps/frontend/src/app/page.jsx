@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { redirect } from "next/navigation";
 import {
@@ -21,7 +20,6 @@ export default function Home() {
     recognition.onresult = (event) => {
       const command = event.results[0][0].transcript.trim();
       console.log("Heard:", command);
-
       const normalizedCommand = command.toLowerCase();
       const normalizedReadCommands = readCommands.map((cmd) =>
         cmd.toLowerCase(),
@@ -29,13 +27,11 @@ export default function Home() {
       const normalizedTravelCommands = travelCommands.map((cmd) =>
         cmd.toLowerCase(),
       );
-
       console.log("Normalized command:", normalizedCommand);
       console.log("Checking against:", normalizedReadCommands);
-
       if (normalizedReadCommands.includes(normalizedCommand)) {
         console.log("Match found! Redirecting...");
-        redirect("/read-book"); // Move redirect outside try/catch
+        redirect("/read-book");
       } else if (normalizedTravelCommands.includes(normalizedCommand)) {
         redirect("/travel");
       } else {
@@ -64,10 +60,17 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <h1>Welcome to My App</h1>
+    <div className="bg-white min-h-screen flex flex-col items-center justify-center p-5">
+      <h1 className="text-blue-900 text-4xl mb-5 font-sans">
+        Welcome to My App
+      </h1>
       <div>
-        <button onClick={handleStart}>Start your assistant</button>
+        <button
+          onClick={handleStart}
+          className="bg-blue-600 text-white px-5 py-2 rounded-md text-lg cursor-pointer hover:bg-blue-500 transition-colors duration-300"
+        >
+          Start your assistant
+        </button>
       </div>
     </div>
   );
