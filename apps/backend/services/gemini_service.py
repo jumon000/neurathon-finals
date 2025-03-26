@@ -2,16 +2,17 @@ import google.generativeai as genai
 from nltk.tokenize import sent_tokenize
 from models import analysis_models
 import os
-
+import wandb
 import nltk
-nltk.download('punkt_tab')
 import spacy
 
-API_KEY = os.getenv("GEMINI_API_KEY")
-
-genai.configure(api_key=API_KEY)
-nlp = spacy.load("en_core_web_sm")
+nltk.download('punkt_tab')
 nltk.download("punkt")
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+nlp = spacy.load("en_core_web_sm")
+
+wandb.init(project="text_emotion_analysis", name="emotion_tracking")
 
 def call_gemini(prompt, key):
     model = genai.GenerativeModel("gemini-2.0-flash")
@@ -19,28 +20,29 @@ def call_gemini(prompt, key):
     return response.text.strip()
 
 def analyze_sentence(sentence, prev_emotion=None):
-    # ... (Emotion analysis prompt and logic)
     emotion_prompt = f"""
-    **TASK:** Detect the strongest emotion in the given sentence, considering its tone, punctuation, and prior context.
+    *TASK:* Detect the strongest emotion in the given sentence, considering its tone, punctuation, and prior context.
 
-    **Possible Emotions:**
+    *Possible Emotions:*
     - Positive: Happy, Excited, Proud, Motivated, Hopeful, Admiration
     - Negative: Sad, Angry, Frustrated, Fearful, Regretful
     - Neutral: Informative, Calm, Objective
 
-    **Example Analysis:**
+    *Example Analysis:*
     - "She won the championship!" → Emotion: Excited
     - "He left without saying goodbye." → Emotion: Sad
     - "The sun rises in the east." → Emotion: Neutral
 
-    **Previous Emotion:** {prev_emotion}
-    **Sentence:** "{sentence}"
+    *Previous Emotion:* {prev_emotion}
+    *Sentence:* "{sentence}"
 
-    **Response Format:**
+    *Response Format:*
     [Emotion Name]
     """
-
+    
     emotion = call_gemini(emotion_prompt, "") or prev_emotion or "Neutral"
+    wandb.log({"sentence": sentence, "emotion": emotion})
+    
     return analysis_models.SentenceAnalysis(sentence=sentence, emotion=emotion)
 
 def analyze_text(text):
@@ -57,3 +59,6 @@ def split_text_into_sentences(text):
     doc = nlp(text)
     sentences = [sent.text.strip() for sent in doc.sents]
     return sentences
+
+wandb.finish()
+    
