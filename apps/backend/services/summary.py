@@ -4,9 +4,6 @@ import google.generativeai as genai
 import json
 import re
 
-# Extract text from the image
-image_path = "/content/WIN_20250321_22_24_27_Pro.jpg"  # Replace with your image path
-text = extract_text_from_jpg(image_path)  # Call function correctly
 
 def clean_json_string(json_string):
     """Cleans the JSON string by removing unnecessary escape characters."""
@@ -63,8 +60,7 @@ def summarize_with_gemini(text, model_name="gemini-2.0-flash", api_key=None, num
         print(f"An error occurred: {e}")
         return None
 
-# Example usage
-api_key = "AIzaSyAUtA-vh7plmNFiuuw_PbV7VszKh1-N9ZA"  # Replace with your actual API key
+
 
 json_file = summarize_with_gemini(text, api_key=api_key, model_name="gemini-2.0-flash")
 
