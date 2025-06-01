@@ -7,22 +7,19 @@ Original file is located at
     https://colab.research.google.com/drive/1v2HV97cbTugkIICuCySX76yT4YNRsDvd
 """
 
-!pip install requests
 
 import requests
 import re
 import urllib.parse
 import json
 
-# ✅ Set API Key
-API_KEY = "AIzaSyApEf71UqyEXAZxhrlSLnuG7QsKPLqWIzs"  # Replace with your actual API key
 
-# ✅ Function to Remove HTML Tags
+# Function to Remove HTML Tags
 def remove_html_tags(text):
     clean = re.compile("<.*?>")
     return re.sub(clean, "", text)
 
-# ✅ Function to Get Directions
+# Function to Get Directions
 def get_directions(source, destination):
     encoded_source = urllib.parse.quote(source)
     encoded_destination = urllib.parse.quote(destination)
@@ -43,21 +40,21 @@ def get_directions(source, destination):
 
     return {"steps": directions, "message": "✅ You have reached your destination!"}
 
-# ✅ Set Source and Destination
+# Set Source and Destination
 source = "24.833946,92.779282"
 destination = "24.811365,92.796753"
 
-# ✅ Get Directions
+#  Get Directions
 directions = get_directions(source, destination)
 
-# ✅ Save JSON File
+# Save JSON File
 json_filename = "directions.json"
 with open(json_filename, "w") as json_file:
     json.dump(directions, json_file, indent=4)
 
-print(f"✅ JSON file saved as {json_filename}")
+print(f"JSON file saved as {json_filename}")
 
-# ✅ Download JSON File in Google Colab
+# Download JSON File in Google Colab
 from google.colab import files
 files.download(json_filename)
 
