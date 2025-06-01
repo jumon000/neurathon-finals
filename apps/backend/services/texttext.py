@@ -8,16 +8,8 @@ from google.cloud import documentai
 from nltk.tokenize import sent_tokenize
 from pydantic import BaseModel
 
-# 🔹 Step 1: Set Up Google Cloud Document AI Credentials
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/content/resolute-spirit-454314-h1-6ddb17df149c.json"
-
-# 🔹 Google Cloud Document AI Configuration
-PROJECT_ID = "551546090178"
-LOCATION = "us"  # Change if needed
-PROCESSOR_ID = "184d92b58818c9cc"  # Replace with your Document AI Processor ID
-
 # 🔹 Configure Google Gemini API Key
-genai.configure(api_key="6ddb17df149ccb59fe4da2a77466551921fde7f7")
+genai.configure(api_key="api-key")
 
 # 🔹 Load spaCy Model
 nlp = spacy.load("en_core_web_sm")
@@ -25,9 +17,6 @@ nlp = spacy.load("en_core_web_sm")
 # 🔹 Download NLTK Data
 nltk.download("punkt")
 
-# ---------------------------
-# 📌 Step 1: Extract Text from JPG Using Google Document AI
-# ---------------------------
 def extract_text_from_jpg(image_path):
     """
     Extracts text from a JPG image using Google Document AI.
@@ -140,20 +129,15 @@ def analyze_text(text):
 
 analysis = analyze_text(text)
 
-# ---------------------------
-# 📌 Step 4: Save Analysis Results
-# ---------------------------
+
 analysis_json = analysis.model_dump_json(indent=4)
 with open("analysis_result.json", "w") as f:
     f.write(analysis_json)
 
 print("\n✅ **Analysis saved to analysis_result.json**")
 
-# ---------------------------
-# 📌 Step 5: Clean Extracted JSON Data
-# ---------------------------
-input_file = "analysis_result.json"
-output_file = "final_cleaned_analysis_result.json"
+
+
 
 if os.path.exists(input_file):
     with open(input_file, "r") as f:
@@ -182,11 +166,6 @@ if os.path.exists(input_file):
 else:
     print(f"❌ Error: File '{input_file}' not found. Ensure text analysis was saved first.")
 
-# ---------------------------
-# 📌 Step 6: Print Emotion Analysis Summary
-# ---------------------------
+
 sentence_emotion_map = {sentence.sentence: sentence.emotion for sentence in analysis.sentences}
 
-print("\n🔹 **Sentence-Emotion Map:**")
-for sentence, emotion in sentence_emotion_map.items():
-    print(f"- \"{sentence}\" → Emotion: {emotion}")
